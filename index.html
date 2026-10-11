@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#173f35"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.json">
+<title>Mes recettes</title>
+<style>
+:root{--green:#173f35;--cream:#f6f3eb;--ink:#222821;--muted:#68736b;--line:#dedfd6;--orange:#df8455}
+*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font:16px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header{background:var(--green);color:white;padding:24px 18px 20px;border-radius:0 0 24px 24px}header small{opacity:.75;letter-spacing:.12em;text-transform:uppercase}h1{margin:7px 0 14px;font-size:30px}.search{width:100%;padding:13px 15px;border:0;border-radius:13px;font-size:16px}
+main{max-width:760px;margin:auto;padding:18px 16px 40px}.toolbar{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:18px}.btn{border:0;border-radius:12px;padding:12px 15px;font-weight:650;font-size:15px;background:var(--green);color:white}.btn.secondary{background:#e5e8df;color:var(--green)}.btn.orange{background:var(--orange);color:#241d18}.section-title{display:flex;justify-content:space-between;align-items:center;margin:22px 0 12px}.section-title h2{font-size:20px;margin:0}.muted{color:var(--muted);font-size:14px}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:12px}.recipe-card{background:white;border:1px solid var(--line);border-radius:16px;padding:14px;min-height:130px;cursor:pointer}.emoji{font-size:26px}.recipe-card h3{font-size:16px;margin:9px 0 5px}.tag{display:inline-block;background:#edf0e8;color:var(--green);border-radius:20px;padding:4px 8px;font-size:12px;margin-top:5px}.empty{padding:26px 16px;text-align:center;border:1px dashed #bfc7bb;border-radius:16px;color:var(--muted)}.panel{display:none;background:white;border:1px solid var(--line);border-radius:18px;padding:17px;margin-bottom:18px}.panel.show{display:block}.panel h2{margin-top:0}.field{display:block;width:100%;padding:12px;border:1px solid var(--line);border-radius:11px;margin:6px 0 13px;font:inherit;background:#fff}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}label{font-size:13px;color:var(--muted);font-weight:650}.detail{background:white;border:1px solid var(--line);border-radius:18px;padding:18px;margin-bottom:18px;display:none}.detail.show{display:block}.detail h2{margin:5px 0}.detail li{margin:9px 0;line-height:1.4}.checkline{display:flex;gap:9px;align-items:start}.danger{background:#fae9e3;color:#8c311e}.topline{display:flex;justify-content:space-between;gap:10px;align-items:center}.tiny{font-size:12px;color:var(--muted);line-height:1.4}footer{padding:20px 0 0;text-align:center}.hidden{display:none!important}
+</style>
+</head>
+<body>
+<header><small>Ton carnet de cuisine</small><h1>Mes recettes 🍋</h1><input class="search" id="search" placeholder="Rechercher une recette…" autocomplete="off"></header>
+<main>
+<div class="toolbar"><button class="btn" id="newBtn">＋ Ajouter une recette</button><button class="btn secondary" id="pasteBtn">Coller un lien vidéo</button></div>
+<section class="panel" id="formPanel">
+<div class="topline"><h2 id="formTitle">Nouvelle recette</h2><button class="btn secondary" id="closeForm">Fermer</button></div>
+<p class="muted">Le lien sert à retrouver la vidéo. Pour le moment, complète les ingrédients et les étapes toi-même : les plateformes ne permettent pas toujours une extraction automatique fiable.</p>
+<form id="recipeForm">
+<input type="hidden" id="recipeId">
+<label for="title">Nom de la recette *</label><input class="field" id="title" required placeholder="Ex. Pizza napolitaine">
+<label for="url">Lien TikTok / Reel / Short (facultatif)</label><input class="field" id="url" type="url" placeholder="https://…">
+<div class="row"><div><label for="category">Catégorie</label><select class="field" id="category"><option>Autre</option><option>Apéritif</option><option>Entrée</option><option>Viande</option><option>Poisson</option><option>Pâtes & riz</option><option>Pizza & pain</option><option>Légumes</option><option>Dessert</option><option>Boisson</option></select></div><div><label for="time">Temps total</label><input class="field" id="time" placeholder="Ex. 35 min"></div></div>
+<label for="ingredients">Ingrédients (un par ligne)</label><textarea class="field" id="ingredients" rows="5" placeholder="250 g de farine&#10;150 ml d'eau&#10;1 pincée de sel"></textarea>
+<label for="steps">Étapes (une par ligne)</label><textarea class="field" id="steps" rows="5" placeholder="Mélanger les ingrédients…&#10;Laisser reposer…"></textarea>
+<div class="toolbar"><button class="btn" type="submit">Enregistrer</button><button class="btn secondary" type="button" id="cancelForm">Annuler</button></div>
+</form></section>
+<section class="detail" id="detail"></section>
+<div class="section-title"><h2>Ma bibliothèque</h2><span class="muted" id="count">0 recette</span></div>
+<div class="grid" id="recipes"></div>
+<footer class="tiny">Tes recettes sont enregistrées dans ce navigateur sur cet iPhone. Exporte régulièrement une sauvegarde depuis le menu ci-dessous.</footer>
+<div class="toolbar" style="margin-top:15px"><button class="btn secondary" id="exportBtn">Exporter ma sauvegarde</button><button class="btn secondary" id="importBtn">Importer une sauvegarde</button><input id="fileInput" type="file" accept="application/json,.json" class="hidden"></div>
+</main>
+<script>
+const $=id=>document.getElementById(id), KEY='mes-recettes-v1';
+let recipes=[], activeId=null;
+try{recipes=JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){recipes=[]}
+function save(){localStorage.setItem(KEY,JSON.stringify(recipes));render()}
+function esc(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function lines(s){return s.split('\n').map(x=>x.trim()).filter(Boolean)}
+function render(){const q=$('search').value.toLowerCase();const arr=recipes.filter(r=>(r.title+' '+r.category+' '+r.ingredients.join(' ')).toLowerCase().includes(q));$('count').textContent=`${recipes.length} recette${recipes.length>1?'s':''}`;$('recipes').innerHTML=arr.length?arr.sort((a,b)=>b.updated-a.updated).map(r=>`<article class="recipe-card" data-id="${r.id}"><div class="emoji">🍽️</div><h3>${esc(r.title)}</h3><div class="muted">${esc(r.time||'Temps non indiqué')}</div><span class="tag">${esc(r.category)}</span></article>`).join(''):`<div class="empty" style="grid-column:1/-1">${q?'Aucun résultat.':'Ton carnet est vide pour le moment.<br>Ajoute ta première recette avec le bouton ci-dessus.'}</div>`}
+function openForm(r=null){$('formPanel').classList.add('show');$('detail').classList.remove('show');$('formTitle').textContent=r?'Modifier la recette':'Nouvelle recette';$('recipeId').value=r?.id||'';$('title').value=r?.title||'';$('url').value=r?.url||'';$('category').value=r?.category||'Autre';$('time').value=r?.time||'';$('ingredients').value=(r?.ingredients||[]).join('\n');$('steps').value=(r?.steps||[]).join('\n');$('formPanel').scrollIntoView({behavior:'smooth',block:'start'})}
+function closeForm(){$('formPanel').classList.remove('show');$('recipeForm').reset();$('recipeId').value=''}
+function showDetail(id){const r=recipes.find(x=>x.id===id);if(!r)return;activeId=id;$('formPanel').classList.remove('show');$('detail').classList.add('show');$('detail').innerHTML=`<div class="topline"><span class="tag">${esc(r.category)}</span><button class="btn secondary" id="hideDetail">Fermer</button></div><h2>${esc(r.title)}</h2><p class="muted">${esc(r.time||'')} ${r.url?'· <a target="_blank" rel="noopener" href="'+esc(r.url)+'">Ouvrir la vidéo ↗</a>':''}</p><div class="toolbar"><button class="btn secondary" id="editRecipe">Modifier</button><button class="btn danger" id="deleteRecipe">Supprimer</button></div><h3>Ingrédients</h3>${r.ingredients.length?'<ul>'+r.ingredients.map(x=>`<li class="checkline"><input type="checkbox"><span>${esc(x)}</span></li>`).join('')+'</ul>':'<p class="muted">Aucun ingrédient renseigné.</p>'}<h3>Préparation</h3>${r.steps.length?'<ol>'+r.steps.map(x=>`<li>${esc(x)}</li>`).join('')+'</ol>':'<p class="muted">Aucune étape renseignée.</p>'}`;$('detail').scrollIntoView({behavior:'smooth',block:'start'});$('hideDetail').onclick=()=>$('detail').classList.remove('show');$('editRecipe').onclick=()=>openForm(r);$('deleteRecipe').onclick=()=>{if(confirm('Supprimer cette recette ?')){recipes=recipes.filter(x=>x.id!==id);save();$('detail').classList.remove('show')}}}
+$('recipes').addEventListener('click',e=>{const c=e.target.closest('[data-id]');if(c)showDetail(c.dataset.id)});
+$('search').addEventListener('input',render);$('newBtn').onclick=()=>openForm();$('closeForm').onclick=closeForm;$('cancelForm').onclick=closeForm;
+$('recipeForm').onsubmit=e=>{e.preventDefault();const id=$('recipeId').value||String(Date.now());const old=recipes.find(r=>r.id===id);const r={id,title:$('title').value.trim(),url:$('url').value.trim(),category:$('category').value,time:$('time').value.trim(),ingredients:lines($('ingredients').value),steps:lines($('steps').value),updated:Date.now(),created:old?.created||Date.now()};recipes=recipes.filter(x=>x.id!==id);recipes.push(r);save();closeForm();showDetail(id)};
+$('pasteBtn').onclick=async()=>{let value='';try{value=await navigator.clipboard.readText()}catch(e){value=prompt('Colle ici le lien de ta vidéo :')||''}if(value){openForm();$('url').value=value.trim();$('title').focus()}else alert('Copie d’abord le lien, puis réessaie.')};
+$('exportBtn').onclick=()=>{const blob=new Blob([JSON.stringify(recipes,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='mes-recettes-sauvegarde.json';a.click();URL.revokeObjectURL(a.href)};
+$('importBtn').onclick=()=>$('fileInput').click();$('fileInput').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const data=JSON.parse(await f.text());if(!Array.isArray(data))throw Error();if(confirm('Remplacer la bibliothèque actuelle par cette sauvegarde ?')){recipes=data;save();alert('Sauvegarde importée.')}}catch(err){alert('Fichier de sauvegarde invalide.')}e.target.value=''};
+if('serviceWorker' in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
+render();
+// Accept a link passed in the URL, useful for a future iPhone Shortcut.
+const params=new URLSearchParams(location.search);const incoming=params.get('url');if(incoming){openForm();$('url').value=incoming;history.replaceState({},'',location.pathname)}
+</script>
+</body></html>

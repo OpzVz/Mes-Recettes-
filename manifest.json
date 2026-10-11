@@ -1,0 +1,10 @@
+{
+  "name": "Mes recettes",
+  "short_name": "Recettes",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f6f3eb",
+  "theme_color": "#173f35",
+  "lang": "fr",
+  "description": "Mon carnet personnel de recettes"
+}
